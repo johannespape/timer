@@ -4,7 +4,7 @@ import tkinter as tk
 import os
 
 class Timer(tk.Frame):
-    def __init__(self, root, work_time=25, short_break_time=5, long_break_time=15, clock_speed=10):
+    def __init__(self, root, work_time=25, short_break_time=5, long_break_time=15, clock_speed=1000):
         tk.Frame.__init__(self)
         self.timer_time = 0
         self.clock_speed = clock_speed
@@ -33,7 +33,7 @@ class Timer(tk.Frame):
         self.lbl_time.pack(fill=tk.BOTH, expand=True)
 
         # Progress display
-        self.frame2 = tk.Frame(master=root, width=self.width, height=self.height/8)
+        self.frame2 = tk.Frame(master=root, width=self.width, height=self.height/10)
         self.frame2.pack(fill=tk.BOTH, expand=True, padx=self.padx, pady=self.pady)
         self.lbl_progress = tk.Label(master=self.frame2, text="0/4")
         self.lbl_progress.pack(fill=tk.BOTH, expand=True)
@@ -95,7 +95,7 @@ class Timer(tk.Frame):
             if self.sessions_count % 4 == 0:
                 self.work_session = 0
                 self.short_break = 0
-                self.lbl_time.config(bg="black")
+                self.lbl_time.config(bg="green")
             else:
                 self.work_session = 0
                 self.short_break = 1
@@ -125,6 +125,7 @@ class Timer(tk.Frame):
 # Mainloop
 if __name__ == "__main__":
     window = tk.Tk()
+    window.title("Pomodoro Timer")
 
     if len(sys.argv) == 4:
         # User can provide custom timer specifications via command line input
