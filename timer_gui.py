@@ -16,7 +16,7 @@ class Timer(tk.Frame):
         self.root = root
 
         # Logic
-        self.stop_timer = 1
+        self.timer_stopped = 1
         self.sessions_count = 1
 
         # GUI
@@ -40,13 +40,30 @@ class Timer(tk.Frame):
 
         # Buttons
         self.frame3 = tk.Frame(master=root, width=self.width, height=self.height/2)
-        self.frame3.pack(fill=tk.BOTH, expand=True, padx=self.padx, pady=self.pady)
+        self.frame3.pack(fill=tk.BOTH, expand=True, padx=self.padx)
         self.btn_start_stop = tk.Button(master=self.frame3, text="Start/Stop", command=self.start_stop_timer)
         self.btn_start_stop.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.btn_skip = tk.Button(master=self.frame3, text="Skip session", command=self.skip_session)
         self.btn_skip.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.btn_reset = tk.Button(master=self.frame3, text="Reset timer", command=self.reset_timer)
         self.btn_reset.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.frame4 = tk.Frame(master=root, width=self.width, height=self.height/2)
+        self.frame4.pack(fill=tk.BOTH, expand=True, padx=self.padx, pady=self.pady)
+        self.btn_close = tk.Button(master=self.frame4, text="Close timer", command=self.close_timer)
+        self.btn_close.pack(side=tk.LEFT,fill=tk.BOTH, expand=True)
+
+    def draw_time(self):
+        minutes = math.floor(self.timer_time/60)
+        seconds = self.timer_time%60
+        if seconds < 10 and minutes < 10:
+            self.lbl_time["text"] = f"0{minutes}:0{seconds}"
+        elif seconds >= 10 and minutes < 10:
+            self.lbl_time["text"] = f"0{minutes}:{seconds}"
+        elif seconds < 10 and minutes >= 10:
+            self.lbl_time["text"] = f"{minutes}:0{seconds}"
+        else:
+            self.lbl_time["text"] = f"{minutes}:{seconds}"
 
     def display_time(self):
         if self.sessions_count % 4 == 0:
@@ -59,31 +76,32 @@ class Timer(tk.Frame):
             time_limit = self.short_break_time
         else:
             time_limit = self.long_break_time
-        if self.timer_time <= time_limit + 1 and not self.stop_timer:
-            minutes = math.floor(self.timer_time/60)
-            seconds = self.timer_time%60
-            if seconds < 10 and minutes < 10:
-                self.lbl_time["text"] = f"0{minutes}:0{seconds}"
-            elif seconds >= 10 and minutes < 10:
-                self.lbl_time["text"] = f"0{minutes}:{seconds}"
-            elif seconds < 10 and minutes >= 10:
-                self.lbl_time["text"] = f"{minutes}:0{seconds}"
-            else:
-                self.lbl_time["text"] = f"{minutes}:{seconds}"
+        if self.timer_time <= time_limit + 1 and not self.timer_stopped:
+            self.draw_time()
+            # minutes = math.floor(self.timer_time/60)
+            # seconds = self.timer_time%60
+            # if seconds < 10 and minutes < 10:
+            #     self.lbl_time["text"] = f"0{minutes}:0{seconds}"
+            # elif seconds >= 10 and minutes < 10:
+            #     self.lbl_time["text"] = f"0{minutes}:{seconds}"
+            # elif seconds < 10 and minutes >= 10:
+            #     self.lbl_time["text"] = f"{minutes}:0{seconds}"
+            # else:
+            #     self.lbl_time["text"] = f"{minutes}:{seconds}"
             self.timer_time += 1
             self.root.after(self.clock_speed, self.display_time)
         if self.timer_time == time_limit + 2:
-            self.stop_timer = 1
+            self.timer_stopped = 1
             self.timer_time = 0
             self.session_logic()
             self.bell()
 
     def start_stop_timer(self):
-        if self.stop_timer == 1:
-            self.stop_timer = 0
+        if self.timer_stopped == 1:
+            self.timer_stopped = 0
             self.display_time()
         else:
-            self.stop_timer = 1
+            self.timer_stopped = 1
 
     def session_logic(self):
         if not self.work_session:
@@ -103,24 +121,28 @@ class Timer(tk.Frame):
         self.lbl_time["text"] = "00:00"
 
     def skip_session(self):
-        self.stop_timer = 1
+        self.timer_stopped = 1
         self.session_logic()
         self.timer_time = 0
         self.lbl_time["text"] = "00:00"
 
     def reset_timer(self):
         self.timer_time = 0
-        self.stop_timer = 1
+        self.timer_stopped = 1
         self.lbl_time["text"] = "00:00"
+
+    def close_timer(self):
+        self.root.quit()
+        self.root.destroy()
 
     @staticmethod
     def bell():
         duration = 0.25  # seconds
         freq = 440  # Hz
         os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))
-        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*2))
-        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))
-        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*2))
+        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*5/4))
+        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*3/2))
+        os.system('play -nq -t alsa synth {} sine {}'.format(duration*2, freq*15/8))
 
 # Mainloop
 if __name__ == "__main__":
@@ -129,10 +151,13 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 4:
         # User can provide custom timer specifications via command line input
-        work_time = int(sys.argv[1])
-        short_break_time = int(sys.argv[2])
-        long_break_time = int(sys.argv[3])
-        timer = Timer(window, work_time, short_break_time, long_break_time)
+        try:
+            work_time = int(sys.argv[1])
+            short_break_time = int(sys.argv[2])
+            long_break_time = int(sys.argv[3])
+            timer = Timer(window, work_time, short_break_time, long_break_time)
+        except:
+            print("Failed to initalize timer with given command line input.")
     else:
         # Default option is 25 min work, 5 min short break, 15 min long break
         timer = Timer(window)
