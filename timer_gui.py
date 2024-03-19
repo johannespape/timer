@@ -1,7 +1,10 @@
+import os
 import sys
 import math
+import time
+
 import tkinter as tk
-import os
+from threading import Thread
 
 class Timer(tk.Frame):
     def __init__(self, root, work_time=25, short_break_time=5, long_break_time=15, clock_speed=1000):
@@ -19,7 +22,7 @@ class Timer(tk.Frame):
         self.timer_stopped = 1
         self.sessions_count = 1
 
-        # GUI
+        # GUI options
         self.width = 100
         self.height = 100
         self.padx = 3
@@ -65,11 +68,18 @@ class Timer(tk.Frame):
         else:
             self.lbl_time["text"] = f"{minutes}:{seconds}"
 
-    def display_time(self):
+    def draw_session_progress(self):
         if self.sessions_count % 4 == 0:
             self.lbl_progress["text"] = f"{4}/4"
         else:
             self.lbl_progress["text"] = f"{self.sessions_count % 4}/4"
+
+    """
+        Main function in program. Handles logic for displaying time.
+        Utilizes draw_time and draw_session_progress to interface with frames.
+    """
+    def display_time(self):
+        self.draw_session_progress()
         if self.work_session:
             time_limit = self.work_time
         elif self.short_break:
@@ -78,23 +88,13 @@ class Timer(tk.Frame):
             time_limit = self.long_break_time
         if self.timer_time <= time_limit + 1 and not self.timer_stopped:
             self.draw_time()
-            # minutes = math.floor(self.timer_time/60)
-            # seconds = self.timer_time%60
-            # if seconds < 10 and minutes < 10:
-            #     self.lbl_time["text"] = f"0{minutes}:0{seconds}"
-            # elif seconds >= 10 and minutes < 10:
-            #     self.lbl_time["text"] = f"0{minutes}:{seconds}"
-            # elif seconds < 10 and minutes >= 10:
-            #     self.lbl_time["text"] = f"{minutes}:0{seconds}"
-            # else:
-            #     self.lbl_time["text"] = f"{minutes}:{seconds}"
             self.timer_time += 1
             self.root.after(self.clock_speed, self.display_time)
         if self.timer_time == time_limit + 2:
             self.timer_stopped = 1
             self.timer_time = 0
             self.session_logic()
-            self.bell()
+            self.timer_notification()
 
     def start_stop_timer(self):
         if self.timer_stopped == 1:
@@ -118,26 +118,42 @@ class Timer(tk.Frame):
                 self.work_session = 0
                 self.short_break = 1
                 self.lbl_time.config(bg="blue")
-        self.lbl_time["text"] = "00:00"
+        self.draw_time()
 
     def skip_session(self):
         self.timer_stopped = 1
         self.session_logic()
         self.timer_time = 0
-        self.lbl_time["text"] = "00:00"
+        self.draw_time()
 
     def reset_timer(self):
         self.timer_time = 0
         self.timer_stopped = 1
-        self.lbl_time["text"] = "00:00"
+        self.draw_time()
 
     def close_timer(self):
         self.root.quit()
         self.root.destroy()
 
+    def timer_notification(self):
+        # Format notification
+        popup_root = tk.Tk()
+        popup_root.title("Notification")
+        lbl_popup = tk.Label(popup_root, text = "Session done", font = ("Verdana", 20))
+        lbl_popup.pack()
+        popup_root.geometry('400x50+700+500')
+        popup_root.after(2000, popup_root.destroy) # Kill after 2 seconds
+
+        # Play bell
+        thread = Thread(target=self.bell())
+        thread.start()
+
+        # Display Notification
+        popup_root.mainloop()
+
     @staticmethod
     def bell():
-        duration = 0.25  # seconds
+        duration = 0.25  # Seconds
         freq = 440  # Hz
         os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))
         os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*5/4))
