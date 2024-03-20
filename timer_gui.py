@@ -9,7 +9,7 @@ from threading import Thread
 import vlc
 
 class Timer(tk.Frame):
-    def __init__(self, root, work_time=10, short_break_time=5, long_break_time=15, clock_speed=10):
+    def __init__(self, root, work_time=25, short_break_time=5, long_break_time=15, clock_speed=1000):
         tk.Frame.__init__(self)
         self.timer_time = 0
         self.clock_speed = clock_speed
