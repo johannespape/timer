@@ -6,8 +6,10 @@ import time
 import tkinter as tk
 from threading import Thread
 
+import vlc
+
 class Timer(tk.Frame):
-    def __init__(self, root, work_time=25, short_break_time=5, long_break_time=15, clock_speed=1000):
+    def __init__(self, root, work_time=10, short_break_time=5, long_break_time=15, clock_speed=10):
         tk.Frame.__init__(self)
         self.timer_time = 0
         self.clock_speed = clock_speed
@@ -80,6 +82,7 @@ class Timer(tk.Frame):
     """
     def display_time(self):
         self.draw_session_progress()
+        # Determine session
         if self.work_session:
             time_limit = self.work_time
         elif self.short_break:
@@ -93,8 +96,11 @@ class Timer(tk.Frame):
         if self.timer_time == time_limit + 2:
             self.timer_stopped = 1
             self.timer_time = 0
-            self.session_logic()
-            self.timer_notification()
+            thread = Thread(target=self.timer_notification)
+            thread.start()
+            time.sleep(0.1)
+            self.session_logic() # Update session logic
+            self.draw_time()
 
     def start_stop_timer(self):
         if self.timer_stopped == 1:
@@ -118,7 +124,6 @@ class Timer(tk.Frame):
                 self.work_session = 0
                 self.short_break = 1
                 self.lbl_time.config(bg="blue")
-        self.draw_time()
 
     def skip_session(self):
         self.timer_stopped = 1
@@ -139,13 +144,16 @@ class Timer(tk.Frame):
         # Format notification
         popup_root = tk.Tk()
         popup_root.title("Notification")
-        lbl_popup = tk.Label(popup_root, text = "Session done", font = ("Verdana", 20))
+        if self.work_session:
+            lbl_popup = tk.Label(popup_root, text = "Session done, take a break", font = ("Verdana", 20))
+        else:
+            lbl_popup = tk.Label(popup_root, text = "Break over, start session", font = ("Verdana", 20))
         lbl_popup.pack()
         popup_root.geometry('400x50+700+500')
-        popup_root.after(2000, popup_root.destroy) # Kill after 2 seconds
+        popup_root.after(4000, popup_root.destroy) # Kill after 2 seconds
 
         # Play bell
-        thread = Thread(target=self.bell())
+        thread = Thread(target=self.bell)
         thread.start()
 
         # Display Notification
@@ -153,12 +161,14 @@ class Timer(tk.Frame):
 
     @staticmethod
     def bell():
-        duration = 0.25  # Seconds
-        freq = 440  # Hz
-        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))
-        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*5/4))
-        os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*3/2))
-        os.system('play -nq -t alsa synth {} sine {}'.format(duration*2, freq*15/8))
+        sound_player = vlc.MediaPlayer("file:///home/johannes/scripts/timer/microwave_notification_sound.mp3")
+        sound_player.play()
+        # duration = 0.25  # Seconds
+        # freq = 440  # Hz
+        # os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq))
+        # os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*5/4))
+        # os.system('play -nq -t alsa synth {} sine {}'.format(duration, freq*3/2))
+        # os.system('play -nq -t alsa synth {} sine {}'.format(duration*2, freq*15/8))
 
 # Mainloop
 if __name__ == "__main__":
