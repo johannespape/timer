@@ -144,12 +144,16 @@ class Timer(tk.Frame):
         # Format notification
         popup_root = tk.Tk()
         popup_root.title("Notification")
+        frame = tk.Frame(master=popup_root, width=self.width, height=self.height)
+        frame.pack(fill=tk.BOTH, expand=True, padx=self.padx, pady=self.pady)
         if self.work_session:
-            lbl_popup = tk.Label(popup_root, text = "Session done, take a break", font = ("Verdana", 20))
+            lbl_popup = tk.Label(frame, text = "Session done, take a break", font = ("Verdana", 20))
         else:
-            lbl_popup = tk.Label(popup_root, text = "Break over, start session", font = ("Verdana", 20))
-        lbl_popup.pack()
-        popup_root.geometry('400x50+700+500')
+            lbl_popup = tk.Label(frame, text = "Break over, start session", font = ("Verdana", 20))
+        lbl_popup.pack(fill=tk.BOTH, expand=True)
+        btn_popup = tk.Button(frame, text="Close", command=popup_root.destroy)
+        btn_popup.pack(fill=tk.BOTH, expand=True)
+        # popup_root.geometry('400x50+700+500')
         popup_root.after(4000, popup_root.destroy) # Kill after 2 seconds
 
         # Play bell
