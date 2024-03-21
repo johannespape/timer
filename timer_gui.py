@@ -19,6 +19,7 @@ class Timer(tk.Frame):
         self.work_session = 1
         self.short_break = 0
         self.root = root
+        self.root.bind('<space>', self.start_stop_timer)
 
         # Logic
         self.timer_stopped = 1
@@ -102,7 +103,7 @@ class Timer(tk.Frame):
             self.session_logic() # Update session logic
             self.draw_time()
 
-    def start_stop_timer(self):
+    def start_stop_timer(self, event=None):
         if self.timer_stopped == 1:
             self.timer_stopped = 0
             self.display_time()
