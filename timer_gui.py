@@ -16,14 +16,17 @@ class Timer(tk.Frame):
         self.work_time = work_time * 60
         self.short_break_time = short_break_time * 60
         self.long_break_time = long_break_time * 60
-        self.work_session = 1
-        self.short_break = 0
         self.root = root
+
+        # Keybindings
         self.root.bind('<space>', self.start_stop_timer)
 
-        # Logic
+        # Logic attributes
         self.timer_stopped = 1
         self.sessions_count = 1
+        self.timer_running = False
+        self.work_session = 1
+        self.short_break = 0
 
         # GUI options
         self.width = 100
@@ -81,36 +84,45 @@ class Timer(tk.Frame):
         Main function in program. Handles logic for displaying time.
         Utilizes draw_time and draw_session_progress to interface with frames.
     """
-    def display_time(self):
-        self.draw_session_progress()
-        # Determine session
+    def time_loop(self):
+        if self.timer_stopped:
+            self.timer_running = False
+            return
+        self.timer_running = True
+
+        # Determine and draw session
         if self.work_session:
             time_limit = self.work_time
         elif self.short_break:
             time_limit = self.short_break_time
         else:
             time_limit = self.long_break_time
-        if self.timer_time <= time_limit + 1 and not self.timer_stopped:
+        self.draw_session_progress()
+
+        if self.timer_time <= time_limit + 1:
             self.draw_time()
             self.timer_time += 1
-            self.root.after(self.clock_speed, self.display_time)
+            self.root.after(self.clock_speed, self.time_loop)
         if self.timer_time == time_limit + 2:
             self.timer_stopped = 1
             self.timer_time = 0
             thread = Thread(target=self.timer_notification)
             thread.start()
             time.sleep(0.1)
-            self.session_logic() # Update session logic
+            self.update_session_logic() # Update session logic
             self.draw_time()
+            self.timer_running = False
 
     def start_stop_timer(self, event=None):
         if self.timer_stopped == 1:
             self.timer_stopped = 0
-            self.display_time()
+            if self.timer_running: # Inhibit two timers from running simultaneously
+                return
+            self.time_loop()
         else:
             self.timer_stopped = 1
 
-    def session_logic(self):
+    def update_session_logic(self):
         if not self.work_session:
             self.work_session = 1
             self.short_break = 0
@@ -128,9 +140,10 @@ class Timer(tk.Frame):
 
     def skip_session(self):
         self.timer_stopped = 1
-        self.session_logic()
+        self.update_session_logic()
         self.timer_time = 0
         self.draw_time()
+        self.draw_session_progress()
 
     def reset_timer(self):
         self.timer_time = 0
@@ -188,7 +201,7 @@ if __name__ == "__main__":
             long_break_time = int(sys.argv[3])
             timer = Timer(window, work_time, short_break_time, long_break_time)
         except:
-            print("Failed to initalize timer with given command line input.")
+            sys.exit("Failed to initalize timer with given command line input.\n")
     else:
         # Default option is 25 min work, 5 min short break, 15 min long break
         timer = Timer(window)
