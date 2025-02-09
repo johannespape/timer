@@ -24,7 +24,7 @@ class Timer(tk.Frame):
         # Logic attributes
         self.timer_stopped = 1
         self.sessions_count = 1
-        self.timer_running = False
+        self.timer_running = 0
         self.work_session = 1
         self.short_break = 0
 
@@ -207,3 +207,5 @@ if __name__ == "__main__":
         timer = Timer(window)
 
     window.mainloop()
+
+
